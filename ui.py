@@ -1,6 +1,6 @@
 import sys
 import os
-from nicegui import ui, APIEvents
+from nicegui import ui
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Tuple
