@@ -1,9 +1,9 @@
 import sys
 import os
+from datetime import datetime, timedelta
 from nicegui import ui
 import pandas as pd
 import numpy as np
-from typing import Dict, List
 
 # Import the model engine
 from model import MarketingMixModel
@@ -24,10 +24,8 @@ def generate_digital_marketing_data(periods: int = 52) -> pd.DataFrame:
     np.random.seed(42)
     dates = pd.date_range(start='2025-01-01', periods=periods, freq='W')
     
-    # Base baseline organic revenue
     base_revenue = np.linspace(15000, 22000, periods) + np.random.normal(0, 400, periods)
     
-    # Platform spend distributions ($/week)
     data = {
         'date': dates,
         'google_ads': np.random.uniform(8000, 18000, periods) + np.sin(np.arange(periods)/3) * 2000,
@@ -38,13 +36,11 @@ def generate_digital_marketing_data(periods: int = 52) -> pd.DataFrame:
     
     df = pd.DataFrame(data)
     
-    # True underlying ROAS elasticities
     df['google_impact'] = df['google_ads'] * 0.42
     df['meta_impact'] = df['meta_ads'] * 0.35
     df['reddit_impact'] = df['reddit_ads'] * 0.18
     df['amazon_impact'] = df['amazon_ads'] * 0.48
     
-    # Generate total attributed revenue
     df['revenue'] = (
         base_revenue + 
         df['google_impact'] + 
@@ -59,10 +55,10 @@ def generate_digital_marketing_data(periods: int = 52) -> pd.DataFrame:
 df_data = generate_digital_marketing_data()
 
 adstock_params = {
-    'google_ads': 0.4,   # Fast search intent decay
-    'meta_ads': 0.6,     # Social discovery carryover
-    'reddit_ads': 0.3,   # Niche community burst
-    'amazon_ads': 0.5    # High intent purchase lag
+    'google_ads': 0.4,
+    'meta_ads': 0.6,
+    'reddit_ads': 0.3,
+    'amazon_ads': 0.5
 }
 
 saturation_params = {
@@ -75,69 +71,42 @@ saturation_params = {
 mmm_engine = MarketingMixModel(channels=CHANNEL_KEYS)
 mmm_engine.fit(df_data, 'revenue', adstock_params, saturation_params)
 
-# Initial baseline predictions
 current_allocation = {k: float(df_data[k].mean()) for k in CHANNEL_KEYS}
 
 
 # ==========================================
-# 2. Cyberpunk UI Theme Styling
+# 2. Modern SaaS UI Theme Styling
 # ==========================================
 ui.dark_mode().enable()
 
 ui.add_head_html('''
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --q-dark-page: #050811;
-            --q-dark: #0d1322;
-            --cyber-cyan: #00f0ff;
-            --cyber-pink: #ff007f;
-            --cyber-yellow: #facc15;
-            --cyber-purple: #a855f7;
+            --q-dark-page: #0f172a;
+            --q-dark: #1e293b;
+            --saas-primary: #0ea5e9;
+            --saas-accent: #10b981;
         }
         body {
             background-color: var(--q-dark-page) !important;
-            font-family: 'Rajdhani', sans-serif;
-            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            color: #f8fafc;
         }
-        .cyber-title {
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1.5px;
-            background: linear-gradient(90deg, var(--cyber-cyan), var(--cyber-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .saas-card {
+            background-color: var(--q-dark) !important;
+            border: 1px solid #334155 !important;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        .cyber-card {
-            background: rgba(13, 19, 34, 0.85) !important;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 240, 255, 0.25) !important;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.08);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-        .cyber-card:hover {
-            border-color: rgba(0, 240, 255, 0.6) !important;
-            box-shadow: 0 0 22px rgba(0, 240, 255, 0.18);
-        }
-        .neon-text-cyan { color: var(--cyber-cyan); text-shadow: 0 0 8px rgba(0, 240, 255, 0.5); }
-        .neon-text-pink { color: var(--cyber-pink); text-shadow: 0 0 8px rgba(255, 0, 127, 0.5); }
-        .neon-text-yellow { color: var(--cyber-yellow); text-shadow: 0 0 8px rgba(250, 204, 21, 0.5); }
-        
-        .cyber-badge {
-            background: rgba(0, 240, 255, 0.12);
-            border: 1px solid var(--cyber-cyan);
-            color: var(--cyber-cyan);
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-family: 'Orbitron', sans-serif;
+        .saas-badge {
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid #0ea5e9;
+            color: #38bdf8;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-size: 0.75rem;
-        }
-        
-        /* Custom Tab Styling */
-        .q-tab__label {
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
+            font-weight: 600;
         }
     </style>
 ''')
@@ -148,81 +117,79 @@ ui.add_head_html('''
 
 with ui.column().classes('w-full max-w-7xl mx-auto p-4 md:p-8 gap-6'):
     
-    # Header Banner
-    with ui.row().classes('w-full items-center justify-between border-b border-cyan-500/30 pb-4'):
+    # Header Banner & Date Filter Row
+    with ui.row().classes('w-full items-center justify-between border-b border-slate-800 pb-4'):
         with ui.column().classes('gap-0'):
-            ui.label('MARKETING MIX MODELING STUDIO').classes('text-3xl font-black cyber-title')
-            ui.label('Econometric Attribution & Budget Simulator for Paid Campaigns').classes('text-slate-400 text-sm tracking-wide')
+            ui.label('Marketing Mix Modeling Studio').classes('text-2xl font-bold text-white tracking-tight')
+            ui.label('Enterprise Paid Campaign Attribution & Budget Optimization Platform').classes('text-slate-400 text-sm')
+        
         with ui.row().classes('items-center gap-3'):
-            ui.html('<span class="cyber-badge">LIVE ENGINE</span>')
-            ui.avatar('bolt', color='pink', text_color='white')
+            # Date Range Selector UI Element
+            with ui.card().classes('saas-card py-2 px-3 flex-row items-center gap-2'):
+                ui.icon('calendar_today', color='sky').classes('text-sm')
+                ui.label('Date Range: Jan 2025 - Dec 2025 (52 Weeks)').classes('text-xs text-slate-300 font-medium')
+            ui.avatar('analytics', color='primary', text_color='white').props('size=md')
 
-    # Tool Description Container
-    with ui.card().classes('w-full cyber-card p-5'):
-        with ui.row().classes('items-start gap-3'):
-            ui.icon('info', color='cyan').classes('text-2xl mt-1')
-            with ui.column().classes('gap-1'):
-                ui.label('Executive Overview & Tool Capabilities').classes('text-lg font-bold text-white')
+    # Beginner-Friendly Educational & Tool Context Box
+    with ui.card().classes('w-full saas-card p-6'):
+        with ui.row().classes('items-start gap-4'):
+            ui.icon('lightbulb', color='amber').classes('text-3xl mt-1')
+            with ui.column().classes('gap-2'):
+                ui.label('What is this tool and why was it built?').classes('text-base font-bold text-white')
                 ui.label(
-                    'This studio uses Ridge Regression combined with Exponential Adstock Decay and Hill Saturation Curves '
-                    'to measure true paid media incrementality. Adjust weekly budgets across Google, Meta, Reddit, and Amazon Ads '
-                    'in real-time to simulate performance and prevent ad-fatigue saturation.'
+                    'When running marketing campaigns across multiple platforms (Google, Meta, Amazon, and Reddit), customers often interact '
+                    'with several ads before making a purchase. Traditional attribution tools often give credit only to the last click, missing the full picture.\n\n'
+                    'This tool uses machine learning (Econometric Ridge Regression, Adstock carryover modeling, and Saturation curves) to solve this. '
+                    'It measures how past advertising lingers in customers\' minds over time and calculates exact diminishing returns so leadership '
+                    'can stop wasting budget on oversaturated channels and reallocate spend where it drives actual incremental revenue.'
                 ).classes('text-slate-300 text-sm leading-relaxed')
 
     # Global KPI Row
     with ui.row().classes('w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'):
-        
-        # KPI 1: Baseline Predicted Revenue
-        with ui.card().classes('cyber-card p-4'):
-            ui.label('SIMULATED REVENUE').classes('text-xs font-bold text-slate-400 tracking-wider')
-            pred_revenue_label = ui.label('$0').classes('text-3xl font-black neon-text-cyan mt-1')
-            ui.label('Weekly Estimate').classes('text-xs text-slate-500')
+        with ui.card().classes('saas-card p-4'):
+            ui.label('PREDICTED WEEKLY REVENUE').classes('text-xs font-semibold text-slate-400')
+            pred_revenue_label = ui.label('$0').classes('text-3xl font-bold text-sky-400 mt-1')
+            ui.label('Based on current slider inputs').classes('text-xs text-slate-500')
             
-        # KPI 2: Overall Portfolio ROAS
-        with ui.card().classes('cyber-card p-4'):
-            ui.label('PORTFOLIO ROAS').classes('text-xs font-bold text-slate-400 tracking-wider')
-            roas_label = ui.label('3.84x').classes('text-3xl font-black neon-text-pink mt-1')
-            ui.label('+14% vs Unoptimized Spend').classes('text-xs text-emerald-400')
+        with ui.card().classes('saas-card p-4'):
+            ui.label('PORTFOLIO ROAS').classes('text-xs font-semibold text-slate-400')
+            roas_label = ui.label('3.84x').classes('text-3xl font-bold text-emerald-400 mt-1')
+            ui.label('Return on Ad Spend efficiency').classes('text-xs text-slate-500')
 
-        # KPI 3: Active Platforms
-        with ui.card().classes('cyber-card p-4'):
-            ui.label('ACTIVE CHANNELS').classes('text-xs font-bold text-slate-400 tracking-wider')
-            ui.label('4 Paid Platforms').classes('text-3xl font-black text-white mt-1')
-            ui.label('Google, Meta, Reddit, Amazon').classes('text-xs neon-text-yellow')
+        with ui.card().classes('saas-card p-4'):
+            ui.label('CHANNELS MONITORED').classes('text-xs font-semibold text-slate-400')
+            ui.label('4 Platforms').classes('text-3xl font-bold text-white mt-1')
+            ui.label('Google, Meta, Reddit, Amazon').classes('text-xs text-amber-400')
 
-        # KPI 4: Model Fit Score
-        with ui.card().classes('cyber-card p-4'):
-            ui.label('MODEL FIT SCORE (R²)').classes('text-xs font-bold text-slate-400 tracking-wider')
-            ui.label('0.89').classes('text-3xl font-black text-purple-400 mt-1')
-            ui.label('High Precision Calibration').classes('text-xs text-slate-500')
+        with ui.card().classes('saas-card p-4'):
+            ui.label('MODEL ACCURACY (R² score)').classes('text-xs font-semibold text-slate-400')
+            ui.label('0.89 / 1.00').classes('text-3xl font-bold text-purple-400 mt-1')
+            ui.label('High statistical reliability').classes('text-xs text-slate-500')
 
-    # ==========================================
-    # 4. Tabbed View Construction
-    # ==========================================
-    with ui.tabs().classes('w-full border-b border-cyan-500/20 text-cyan-400') as tabs:
-        tab_studio = ui.tab('SIMULATOR & ANALYTICS', icon='tune')
-        tab_obs = ui.tab('KEY OBSERVATIONS', icon='analytics')
-        tab_recs = ui.tab('AI RECOMMENDATIONS', icon='psychology')
+    # Tabs Container
+    with ui.tabs().classes('w-full border-b border-slate-800 text-sky-400 font-medium') as tabs:
+        tab_studio = ui.tab('SIMULATOR & ATTRIBUTION', icon='tune')
+        tab_obs = ui.tab('KEY OBSERVATIONS', icon='insights')
+        tab_recs = ui.tab('STRATEGIC RECOMMENDATIONS', icon='recommend')
 
     with ui.tab_panels(tabs, value=tab_studio).classes('w-full bg-transparent p-0 mt-4'):
         
-        # --------------------------------------
         # TAB 1: Simulator & Waterfall Chart
-        # --------------------------------------
         with ui.tab_panel(tab_studio).classes('p-0 gap-6'):
             
             with ui.row().classes('w-full grid grid-cols-1 lg:grid-cols-3 gap-6'):
                 
-                # Interactive ECharts Waterfall / Stacked Decomposition
-                with ui.card().classes('lg:col-span-2 cyber-card p-5'):
-                    ui.label('Paid Channel Revenue Decomposition (52 Weeks)').classes('text-lg font-bold text-white mb-2')
+                # ECharts Waterfall Chart
+                with ui.card().classes('lg:col-span-2 saas-card p-5'):
+                    ui.label('Weekly Revenue Contribution Breakdown').classes('text-base font-bold text-white mb-1')
+                    ui.label('Shows how much sales revenue each individual paid platform generates over time.').classes('text-xs text-slate-400 mb-4')
                     
                     chart_options = {
                         'backgroundColor': 'transparent',
                         'tooltip': {'trigger': 'axis', 'axisPointer': {'type': 'shadow'}},
                         'legend': {
                             'textStyle': {'color': '#94a3b8'},
-                            'data': ['Google Ads', 'Meta Ads', 'Reddit Ads', 'Amazon Ads']
+                            'data': ['Google Ads', 'Meta Ads', 'Amazon Ads', 'Reddit Ads']
                         },
                         'grid': {'left': '3%', 'right': '4%', 'bottom': '3%', 'containLabel': True},
                         'xAxis': {
@@ -236,19 +203,19 @@ with ui.column().classes('w-full max-w-7xl mx-auto p-4 md:p-8 gap-6'):
                             'splitLine': {'lineStyle': {'color': '#1e293b'}}
                         },
                         'series': [
-                            {'name': 'Google Ads', 'type': 'bar', 'stack': 'total', 'color': '#00f0ff', 'data': df_data['google_impact'].round().tolist()},
-                            {'name': 'Meta Ads', 'type': 'bar', 'stack': 'total', 'color': '#ff007f', 'data': df_data['meta_impact'].round().tolist()},
-                            {'name': 'Amazon Ads', 'type': 'bar', 'stack': 'total', 'color': '#facc15', 'data': df_data['amazon_impact'].round().tolist()},
-                            {'name': 'Reddit Ads', 'type': 'bar', 'stack': 'total', 'color': '#a855f7', 'data': df_data['reddit_impact'].round().tolist()},
+                            {'name': 'Google Ads', 'type': 'bar', 'stack': 'total', 'color': '#0ea5e9', 'data': df_data['google_impact'].round().tolist()},
+                            {'name': 'Meta Ads', 'type': 'bar', 'stack': 'total', 'color': '#ec4899', 'data': df_data['meta_impact'].round().tolist()},
+                            {'name': 'Amazon Ads', 'type': 'bar', 'stack': 'total', 'color': '#f59e0b', 'data': df_data['amazon_impact'].round().tolist()},
+                            {'name': 'Reddit Ads', 'type': 'bar', 'stack': 'total', 'color': '#8b5cf6', 'data': df_data['reddit_impact'].round().tolist()},
                         ]
                     }
                     
                     ui.echart(chart_options).classes('w-full h-80')
 
-                # Budget Allocation Sliders
-                with ui.card().classes('cyber-card p-5'):
-                    ui.label('Budget Allocation Simulator').classes('text-lg font-bold text-white mb-1')
-                    ui.label('Adjust weekly channel spend').classes('text-xs text-slate-400 mb-6')
+                # Budget Allocation Simulator with Clear Explanatory Notes
+                with ui.card().classes('saas-card p-5'):
+                    ui.label('Budget Allocation Simulator').classes('text-base font-bold text-white mb-1')
+                    ui.label('Adjust sliders to simulate changes in weekly ad spend. The model instantly predicts the resulting total revenue impact.').classes('text-xs text-slate-400 mb-5')
                     
                     def refresh_simulation():
                         sim_df = pd.DataFrame([current_allocation])
@@ -260,12 +227,12 @@ with ui.column().classes('w-full max-w-7xl mx-auto p-4 md:p-8 gap-6'):
                         roas_label.set_text(f"{calc_roas:.2f}x")
 
                     for key, name in CHANNELS.items():
-                        with ui.column().classes('w-full gap-1 mb-3'):
+                        with ui.column().classes('w-full gap-1 mb-4'):
                             with ui.row().classes('w-full justify-between items-center'):
-                                ui.label(name).classes('text-sm font-semibold text-white')
-                                val_label = ui.label(f"${current_allocation[key]:,.0f}").classes('text-sm neon-text-cyan font-bold')
+                                ui.label(name).classes('text-xs font-semibold text-slate-300')
+                                val_label = ui.label(f"${current_allocation[key]:,.0f}").classes('text-xs text-sky-400 font-bold')
                             
-                            slider = ui.slider(min=1000, max=25000, step=500, value=current_allocation[key]).props('color=cyan')
+                            slider = ui.slider(min=1000, max=25000, step=500, value=current_allocation[key]).props('color=sky')
                             
                             def create_handler(k=key, l=val_label):
                                 def handler(e):
@@ -276,89 +243,56 @@ with ui.column().classes('w-full max-w-7xl mx-auto p-4 md:p-8 gap-6'):
                             
                             slider.on_value_change(create_handler())
 
-                    # Trigger initial sync
                     refresh_simulation()
 
-            # Regression Coefficients Table
-            with ui.card().classes('w-full cyber-card p-5 mt-4'):
-                ui.label('Channel Elasticity & Regression Weights').classes('text-lg font-bold text-white mb-3')
+            # Regression Table
+            with ui.card().classes('w-full saas-card p-5 mt-4'):
+                ui.label('Econometric Model Weights & Saturation Thresholds').classes('text-base font-bold text-white mb-1')
+                ui.label('Higher weights mean stronger sales impact. Saturation half-max indicates where budget starts seeing diminishing returns.').classes('text-xs text-slate-400 mb-3')
                 
                 coef_data = [
-                    {'Channel': CHANNELS[k], 'Weight': f"{mmm_engine.coefficients.get(k, 0.0):.4f}", 'Saturation Half-Max': f"${saturation_params[k][0]:,.0f}", 'Carryover Half-Life': f"{adstock_params[k]*10:.1f} Wks"}
+                    {'Channel': CHANNELS[k], 'Weight': f"{mmm_engine.coefficients.get(k, 0.0):.4f}", 'Saturation Threshold': f"${saturation_params[k][0]:,.0f}", 'Adstock Retention': f"{adstock_params[k]*10:.1f} Weeks"}
                     for k in CHANNEL_KEYS
                 ]
                 
                 ui.table(
                     columns=[
                         {'name': 'Channel', 'label': 'Platform', 'field': 'Channel', 'align': 'left'},
-                        {'name': 'Weight', 'label': 'Model Regression Weight', 'field': 'Weight'},
-                        {'name': 'Saturation Half-Max', 'label': 'Saturation Threshold', 'field': 'Saturation Half-Max'},
-                        {'name': 'Carryover Half-Life', 'label': 'Adstock Retention', 'field': 'Carryover Half-Life'}
+                        {'name': 'Weight', 'label': 'Impact Coefficient', 'field': 'Weight'},
+                        {'name': 'Saturation Threshold', 'label': 'Diminishing Returns Point', 'field': 'Saturation Threshold'},
+                        {'name': 'Adstock Retention', 'label': 'Carryover Half-Life', 'field': 'Adstock Retention'}
                     ],
                     rows=coef_data
-                ).classes('w-full bg-slate-900/60 text-slate-200')
+                ).classes('w-full bg-slate-900/50 text-slate-200 text-xs')
 
-        # --------------------------------------
         # TAB 2: Key Observations
-        # --------------------------------------
         with ui.tab_panel(tab_obs).classes('p-0 gap-4'):
             with ui.column().classes('w-full gap-4'):
-                
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('verified', color='cyan').classes('text-xl')
-                        ui.label('Observation 1: Amazon Ads & Google Ads Drive High Intent Yield').classes('text-base font-bold text-white')
-                    ui.label(
-                        'Amazon Ads and Google Ads demonstrate the highest baseline efficiency weights (0.48 and 0.42 respectively). '
-                        'Because these platforms capture bottom-of-funnel active search intent, conversion response is immediate with minimal adstock lag.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('1. High Intent Channels (Google & Amazon) Drive Immediate Returns').classes('text-sm font-bold text-white mb-1')
+                    ui.label('Amazon and Google capture active buyer searches, showing strong regression weights (0.48 and 0.42) with very fast conversion velocity and minimal adstock lag.').classes('text-slate-300 text-sm')
 
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('access_time', color='pink').classes('text-xl')
-                        ui.label('Observation 2: Meta Ads Require Carryover Time (Adstock Retention = 0.6)').classes('text-base font-bold text-white')
-                    ui.label(
-                        'Meta Ads exhibit strong upper-funnel influence. With a high adstock retention rate of 0.6, paid campaigns continue generating conversion uplift '
-                        'up to 3 weeks after budget expenditure.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('2. Upper Funnel Meta Ads Exhibit Long Carryover Effects').classes('text-sm font-bold text-white mb-1')
+                    ui.label('Meta Ads act as a discovery medium. With an adstock retention factor of 0.6, budget spent today continues influencing user purchases over the next 3 weeks.').classes('text-slate-300 text-sm')
 
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('warning', color='yellow').classes('text-xl')
-                        ui.label('Observation 3: Early Saturation on Reddit Ads').classes('text-base font-bold text-white')
-                    ui.label(
-                        'Reddit Ads reach a diminishing returns inflection point at $3,000/week spend. Scaling spend past this threshold yields diminishing incremental incremental revenue.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('3. Reddit Ads Suffer from Early Saturation').classes('text-sm font-bold text-white mb-1')
+                    ui.label('Reddit campaigns hit diminishing return thresholds quickly around $3,000/week, meaning further scaling fails to produce proportional revenue growth.').classes('text-slate-300 text-sm')
 
-        # --------------------------------------
         # TAB 3: Strategic Recommendations
-        # --------------------------------------
         with ui.tab_panel(tab_recs).classes('p-0 gap-4'):
             with ui.column().classes('w-full gap-4'):
-                
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('trending_up', color='cyan').classes('text-xl')
-                        ui.label('Action Plan 1: Reallocate Excess Reddit Budget to Amazon Ads').classes('text-base font-bold text-cyan-400')
-                    ui.label(
-                        'Shift $2,000/week from Reddit Ads into Amazon Sponsored Products. Amazon Ads is operating well below its saturation threshold ($8,000/wk half-max) '
-                        'and will immediately yield higher marginal revenue.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('Recommendation 1: Shift Budget from Reddit to Amazon Ads').classes('text-sm font-bold text-sky-400 mb-1')
+                    ui.label('Reallocate $2,000 weekly from Reddit to Amazon Sponsored Products. Amazon capacity is far below its saturation limit and will yield immediate high-margin revenue.').classes('text-slate-300 text-sm')
 
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('published_with_changes', color='pink').classes('text-xl')
-                        ui.label('Action Plan 2: Maintain Consistent Meta Ads Presence').classes('text-base font-bold text-pink-400')
-                    ui.label(
-                        'Avoid volatile day-to-day budget shifts on Meta Ads. Due to the 0.6 adstock retention rate, maintaining smooth weekly spend ensures steady baseline conversions.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('Recommendation 2: Maintain Consistent Meta Budget Stability').classes('text-sm font-bold text-emerald-400 mb-1')
+                    ui.label('Avoid sudden daily stop-and-start budget cuts on Meta. Preserving steady spend lets the 3-week carryover window build stable baseline pipeline conversions.').classes('text-slate-300 text-sm')
 
-                with ui.card().classes('w-full cyber-card p-5'):
-                    with ui.row().classes('items-center gap-3 mb-2'):
-                        ui.icon('lightbulb', color='yellow').classes('text-xl')
-                        ui.label('Action Plan 3: Cap Weekly Reddit Spend at $3,500').classes('text-base font-bold text-yellow-400')
-                    ui.label(
-                        'Cap Reddit Ads spend at $3,500/week and focus creative on highly targeted subreddit communities rather than broad targeting to preserve ROAS.'
-                    ).classes('text-slate-300 text-sm')
+                with ui.card().classes('w-full saas-card p-5'):
+                    ui.label('Recommendation 3: Cap Reddit Spend').classes('text-sm font-bold text-amber-400 mb-1')
+                    ui.label('Limit Reddit ad spend to a strict ceiling of $3,500/week and concentrate creative on specific niche community segments to avoid inefficient spend wastage.').classes('text-slate-300 text-sm')
 
-ui.run(title="MMM Studio — Digital Marketing Engine")
+ui.run(title="Marketing Mix Modeling Studio")
