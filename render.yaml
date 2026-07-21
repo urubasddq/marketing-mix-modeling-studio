@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mmm-engine-studio
+    env: docker
+    plan: free
+    region: oregon # or your preferred region
+    dockerContext: .
+    dockerfilePath: Dockerfile # We will create this next
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
